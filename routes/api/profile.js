@@ -26,4 +26,49 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// @route   POST api/profile
+// @desc    Create or update user profile
+// @access  Private
+router.post('/', auth, async (req, res) => {
+  const {
+    location,
+    bio,
+    youtube,
+    facebook,
+    twitter,
+    instagram,
+    linkedin
+  } = req.body;
+
+  // Build profile object
+  const profileFields = {};
+
+  profileFields.user = req.user.id;
+
+  if (location) profileFields.location = location;
+  if (bio) profileFields.bio = bio;
+
+  // Build social object
+  profileFields.social = {};
+  if (youtube) profileFields.social.youtube = youtube;
+  if (facebook) profileFields.social.facebook = facebook;
+  if (twitter) profileFields.social.twitter = twitter;
+  if (instagram) profileFields.social.instagram = instagram;
+  if (linkedin) profileFields.social.linkedin = linkedin;
+
+  try {
+    let profile = await Profile.findOneAndUpdate(
+      { user: req.user.id },
+      { $set: profileFields },
+      { new: true, upsert: true }
+    );
+
+    res.json(profile);
+  } catch (err) {
+    console.error(err.message);
+
+    res.status(500).send('Server error');
+  }
+});
+
 module.exports = router;
